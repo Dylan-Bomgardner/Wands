@@ -1,0 +1,33 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/04B_30__.TTF",
+      "sha1": "b15260c68d2922990429ab69396f2d9ab4dfb07c"
+    },
+    {
+      "path": "assets/fonts/1up.ttf",
+      "sha1": "3aa01c784c5b1cd4791c02603263c097c1945402"
+    },
+    {
+      "path": "assets/fonts/alagard.ttf",
+      "sha1": "38153b39f3a59fabd930b78474fa173746fa52b7"
+    },
+    {
+      "path": "assets/fonts/GothicPixels.ttf",
+      "sha1": "a12949ab6f6b43a8b4a7523277e3c269aa52f537"
+    },
+    {
+      "path": "assets/fonts/PixelOperator-Bold.ttf",
+      "sha1": "e67f5d80eea806dad89d5e821edbeabe9c3433d6"
+    },
+    {
+      "path": "assets/fonts/PixelOperator.ttf",
+      "sha1": "67ce0402b9fd66b96874e7e63bd77be54c6ece22"
+    },
+    {
+      "path": "assets/fonts/upheavtt.ttf",
+      "sha1": "73fc04635530cd69e9eb341f771808918002a93d"
+    }
+  ]
+}
