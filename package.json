@@ -13,7 +13,8 @@
     "react": "18.2.0",
     "react-native": "0.71.3",
     "react-native-network-info": "^5.2.1",
-    "react-native-nfc-manager": "^3.14.2"
+    "react-native-nfc-manager": "^3.14.2",
+    "react-native-tcp-socket": "^6.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -34,5 +35,8 @@
   },
   "jest": {
     "preset": "react-native"
+  },
+  "react-native": {
+    "net": "react-native-tcp-socket"
   }
 }
