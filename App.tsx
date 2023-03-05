@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Vibration } from 'react-native';
 import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
 import { NetworkInfo } from 'react-native-network-info';
 import TcpSocket from 'react-native-tcp-socket';
@@ -45,6 +45,7 @@ function App() {
   const [spellCooldown, setSpellCooldown] = React.useState(0);
   const [socket, setSocket] = React.useState<TcpSocket.Socket>();
   const [blocking, setBlocking] = React.useState(false);
+  const [dead, setDead] = React.useState(false);
   
 
 
