@@ -23,10 +23,11 @@ var i = 0;
 NfcManager.start();
 
 const remotePort = 12345;
-const remoteHost = '10.203.168.51';
+const remoteHost = '10.203.154.20';
 
 const socket = dgram.createSocket('udp4');
 
+let health = 100;
 socket.bind(12345);
 
 function App() {
@@ -43,7 +44,8 @@ function App() {
   const [shaking, setShaking] = React.useState(false);
   const [initialAttack, setInitialAttack] = React.useState(false);
 
-  const [health, setHealth] = React.useState(100);
+  //const [health, setHealth] = React.useState(100);
+
   const [spellCooldown, setSpellCooldown] = React.useState(0);
   //const [socket, setSocket] = React.useState<TcpSocket.Socket>();
   const [blocking, setBlocking] = React.useState(false);
@@ -95,11 +97,14 @@ function App() {
         }
         break;
       case 1:
-        //console.log("BLOCKING TRUE");
-        //setBlocking(true);
+        console.log("BLOCKING TRUE");
+        
+        setBlocking(true);
         if(pitch <= 10) {
           
           setBlock(0);
+          setBlocking(false);
+          console.log("blocking false");
         }
         break;
     }
@@ -172,7 +177,7 @@ async function readNdef() {
   }
 }
 
-async function writeNdef({type, value}) {
+async function writeNdef() {
   let result = false;
 
   try {
@@ -211,25 +216,24 @@ function handleMessage(data: Message) {
           break;
       }
       Vibration.vibrate();
-      setTimeout(() => {
+     setTimeout(() => {
         if (!blocking) {
-          setHealth(health - damage);
+          health -= damage;
           console.log("You were hit by " + damage + " damage!");
           //send message that you were hit to oppoenent
           if (health <= 0) {
             setDead(true);
             setInGame(false);
             console.log("You died!");
-            socket.send(JSON.stringify({ type: "dead", isDead: true }), undefined, undefined, remotePort, remoteHost, function(err) {
-              if (err) throw err
-          
-              console.log('Message sent!')
-            });
           }
         }
         Vibration.cancel();
-       //socket.send(JSON.stringify({ type: "hit", hit: { health: health, by: data.spell.type, dead: dead } }));
-      }, bigdata.spell.delay);
+        socket.send(JSON.stringify({ type: "hit", hit: { by: bigdata.spell.type, dead: dead} }), undefined, undefined, remotePort, remoteHost, function(err) {
+          if (err) throw err
+      
+          console.log('Message sent!')
+        });
+      }, 3000);
       break;
     case "hit":
       //hit success
@@ -237,7 +241,8 @@ function handleMessage(data: Message) {
       console.log("Opponent health: " + bigdata.hit.health);
       if (bigdata.hit.dead) {
         console.log("Opponent died!");
-        //socket?.destroy();
+        setInGame(false)
+        health = 100
       }
       break;
     case "start":
@@ -303,57 +308,6 @@ return (
   
 );
 }
-
-
-/*
-
-
-const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-        server.close();
-      });
-    }).listen({ port: 5000, host: '0.0.0.0' });
-    
-    server.on('error', (error) => {
-      console.log('An error ocurred with the server', error);
-    });
-    
-    server.on('close', () => {
-      console.log('Server closed connection');
-      setConnected(false);
-    });  
-  }
-  const axis = ["x", "y", "z"];
-  const availableSensors = {
-    accelerometer: axis,
-    gyroscope: axis,
-    magnetometer: axis,
-    barometer: ["pressure"],
-  };
-  const accel = accelerometer.subscribe(({x, y, z, timestamp}) =>
-    console.log({x, y, z, timestamp})
-  );
-  return (
-    <View style={styles.wrapper}>
-      <TouchableOpacity onPress={writeNdef}>
-        <Text>Attack</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={readNdef}>
-        <Text>{Object.entries(availableSensors).map(([name, values]) => (
-          <SensorView key={name} sensorName={name} values={values}  /> ))}
-        </Text>
-      </TouchableOpacity>
-      <Text>{}</Text>
-      <Text>{temp}</Text>
-      <Text>{connected ? "Connected" : "Not Connected"}</Text>
-    </View>
-  );
-}
-*/
-
-
-
 
 const styles = StyleSheet.create({
   wrapper: {
