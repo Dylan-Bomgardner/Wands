@@ -1,10 +1,12 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import NfcManager, {NfcTech, Ndef} from 'react-native-nfc-manager';
-import {NetworkInfo} from 'react-native-network-info';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Vibration } from 'react-native';
+import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
+import { NetworkInfo } from 'react-native-network-info';
 import TcpSocket from 'react-native-tcp-socket';
 // Pre-step, call this before any NFC operations
 import SensorView from "./SensorView";
+import { HCESession, NFCTagType4NDEFContentType, NFCTagType4 } from 'react-native-hce';
+import { createTcpClient, createTcpServer, Message } from './tcp';
 import {
   accelerometer,
   gyroscope,
@@ -12,14 +14,16 @@ import {
   SensorTypes
 } from "react-native-sensors";
 import { map, filter } from "rxjs/operators";
+import { HceTools } from 'react-native-nfc-sdk';
 setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
+
 
 
 
 NfcManager.start();
 
 function App() {
-
+  const hce = new HceTools();
   const [temp, setTemp] = React.useState("");
   const [connected, setConnected] = React.useState(false);
   const [heading, setHeading] = React.useState(0);
@@ -31,36 +35,10 @@ function App() {
   const [spellCooldown, setSpellCooldown] = React.useState(0);
   const [socket, setSocket] = React.useState<TcpSocket.Socket>();
   const [blocking, setBlocking] = React.useState(false);
-  
-  function handleMessage(data: string, 
-    setOpponentHealthVisual: (health: number) => void,
-    writeSocket: (data: string) => void) {
-    let data_json = JSON.parse(data);
-    if (data_json.msg_type === "attack") {
-      if ("damage" in data_json.effects) {
-        setTimeout(() => {
-          if(!blocking)
-          {
-            setHealth(health - data_json.effects.damage);
-            console.log("You were hit by " + data_json.effects.damage + " damage!");
-          }
-          else
-          {
-            
-          }       
-        }, 1000);
-      }
-    }
-    else if (data_json.msg_type === "hit_notif") {
-      console.log("Opponent was hit by your " + data_json.what_hit + "!");
-    }
-    else if (data_json.msg_type === "health_notif") {
-      setOpponentHealthVisual(data_json.new_health);
-    }
-  }
+  const [dead, setDead] = React.useState(false);
+
   async function readNdef() {
-    if(connected)
-    {
+    if (connected) {
       console.warn("Already connected");
       return;
     }
@@ -68,136 +46,128 @@ function App() {
     try {
       let tag: any
       // the resolved tag object will contain `ndefMessage` property
-      tag = await NfcManager.requestTechnology(NfcTech.Ndef); // STEP 1
+      await NfcManager.requestTechnology(NfcTech.Ndef); // STEP 1
+      tag = await NfcManager.getTag(); // STEP 2
       console.warn('Tag found', tag);
-      if(tag == undefined)
-      {
+      if (tag == undefined) {
         throw new Error("Tag not found");
       }
-      const decodedData = Ndef.text.decodePayload(tag.ndefMessage[0].payload);
+      const decodedData = String.fromCharCode(...tag.ndefMessage[0].payload);
+
       console.warn('decodedData', decodedData);
       setTemp(decodedData);
+      setSocket(createTcpClient(temp, setConnected, handleMessage));
     } catch (ex) {
       console.warn('Oops!', ex);
     }
-    finally
-    {
-      await NfcManager.cancelTechnologyRequest();
+    finally {
+      NfcManager.cancelTechnologyRequest();
     }
 
-    const options = {
-      port: 5000,
-      host: temp, //needs to be ip from the other device
-      localAddress: '127.0.0.1',
-      reuseAddress: true,
-    };
-    const client = TcpSocket.createConnection(options, () => {
-      // Write on the socket
-      client.write('Hello server!');
-      setConnected(true);
-      // Close socket
-    });
-
-    client.on('data', function(data) {
-      console.log('message was received', data);
-
-      if(data == "Please Close")
-      {
-        client.destroy();
-      }
-      else
-      {
-        const info = JSON.parse(data.toString());
-        console.log(info);
-      }
-    });
-    
-    client.on('error', function(error) {
-      console.log(error);
-    });
-    
-    client.on('close', function(){
-      console.log('Connection closed!');
-      setConnected(false);
-    });
-
-
   }
-  
+
   async function writeNdef() {
     let result = false;
-    if(connected)
-    {
+    if (connected) {
       console.warn("Already connected");
       return;
     }
     try {
       const ip = await NetworkInfo.getIPV4Address();
-      if( ip == undefined)
-      {
+      if (ip == undefined) {
         throw new Error("IP not found");
-      }    
-      const bytes = Ndef.encodeMessage([Ndef.textRecord(ip)]);
-  
-      if (bytes) {
-        await NfcManager.ndefHandler.writeNdefMessage(bytes); // STEP 3
-        result = true;
       }
+
+      const listen = async () => {
+        const removeListener = session.on(HCESession.Events.HCE_STATE_READ, async () => {
+          console.log("HCE_STATE_READ");
+          await session.setEnabled(false);
+          createTcpServer(setConnected, setSocket, handleMessage);
+        });
+        
+        // to remove the listener:
+        removeListener();
+        console.log("Listening for HCE_STATE_READ");
+      }
+      let session: HCESession;
+
+      const tag = new NFCTagType4({
+        type: NFCTagType4NDEFContentType.Text,
+        content: "AHAAHAHAH",
+        writable: false
+      });
+
+      session = await HCESession.getInstance();
+      session.setApplication(tag);
+      await session.setEnabled(true);
+      listen();
     } catch (ex) {
       console.warn(ex);
     }
-    finally
-    {
-      await NfcManager.cancelTechnologyRequest();
+    finally {
+
     }
-  
-    const server = TcpSocket.createServer(function(socket) {
-      setSocket(socket);
-      socket.on('data', (data) => {
-        socket.write('Echo server ' + data);
-        setConnected(true);
-      });
-    
-      socket.on('error', (error) => {
-        console.log('An error ocurred with client socket ', error);
-      });
-    
-      socket.on('close', (error) => {
-        console.log('Closed connection with ', socket.address());
-        server.close();
-      });
-    }).listen({ port: 5000, host: '0.0.0.0' });
-    
-    server.on('error', (error) => {
-      console.log('An error ocurred with the server', error);
-    });
-    
-    server.on('close', () => {
-      console.log('Server closed connection');
-      setConnected(false);
-    });  
+
   }
-  const axis = ["x", "y", "z"];
-  const availableSensors = {
-    accelerometer: axis,
-    gyroscope: axis,
-    magnetometer: axis,
-    barometer: ["pressure"],
-  };
-  const accel = accelerometer.subscribe(({x, y, z, timestamp}) =>
-    console.log({x, y, z, timestamp})
-  );
+
+  function handleMessage(data: Message) {
+    switch (data.type) {
+      case "spell":
+        let damage = 0;
+        switch (data.spell.type) {
+          case "fireball":
+            damage = data.spell.damage;
+            break;
+        }
+        Vibration.vibrate();
+        setTimeout(() => {
+          if (!blocking) {
+            setHealth(health - damage);
+            console.log("You were hit by " + damage + " damage!");
+            //send message that you were hit to oppoenent
+            if (health <= 0) {
+              setDead(true);
+              console.log("You died!");
+            }
+          }
+          Vibration.cancel();
+          socket?.write(JSON.stringify({ type: "hit", hit: { health: health, by: data.spell.type, dead: dead } }));
+        }, data.spell.delay);
+        break;
+      case "hit":
+        //hit success
+        console.log("Opponent was hit by your " + data.hit.by + "!");
+        console.log("Opponent health: " + data.hit.health);
+        if (data.hit.dead) {
+          console.log("Opponent died!");
+          socket?.destroy();
+        }
+        break;
+      case "start":
+        console.log("Game started!");
+        break;
+    }
+  }
+
+  function attack() {
+    if (spellCooldown > 0) {
+      console.log("Spell on cooldown!");
+      return;
+    }
+    setSpellCooldown(5);
+    socket?.write(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }));
+  }
   return (
     <View style={styles.wrapper}>
       <TouchableOpacity onPress={writeNdef}>
-        <Text>Attack</Text>
+        <Text>Write</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={readNdef}>
-        <Text>{Object.entries(availableSensors).map(([name, values]) => (
-          <SensorView key={name} sensorName={name} values={values}  /> ))}
-        </Text>
+        <Text>Read</Text>
       </TouchableOpacity>
-      <Text>{}</Text>
+      <TouchableOpacity onPress={attack}>
+        <Text>Attack</Text>
+      </TouchableOpacity>
       <Text>{temp}</Text>
       <Text>{connected ? "Connected" : "Not Connected"}</Text>
     </View>
@@ -211,6 +181,7 @@ function App() {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
+    fontSize: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
