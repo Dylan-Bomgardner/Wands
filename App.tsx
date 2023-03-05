@@ -2,10 +2,11 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Vibration, TouchableHighlight } from 'react-native';
 import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
 import { NetworkInfo } from 'react-native-network-info';
-import TcpSocket from 'react-native-tcp-socket';
+//import TcpSocket from 'react-native-tcp-socket';
 // Pre-step, call this before any NFC operations
 import SensorView from "./SensorView";
 import Shake from 'react-native-shake';
+import dgram from 'react-native-udp';
 import {
   accelerometer,
   gyroscope,
@@ -44,12 +45,29 @@ function App() {
 
   const [health, setHealth] = React.useState(100);
   const [spellCooldown, setSpellCooldown] = React.useState(0);
-  const [socket, setSocket] = React.useState<TcpSocket.Socket>();
+  //const [socket, setSocket] = React.useState<TcpSocket.Socket>();
   const [blocking, setBlocking] = React.useState(false);
   const [dead, setDead] = React.useState(false);
   const [inGame, setInGame] = React.useState(false);
   const [backgroundColor, setBackgroundColor] = React.useState('green')
   const [backgroundOpacity, setBackgroundOpacity] = React.useState(0);
+  const [socket, setSocket] = React.useState(dgram.createSocket({type: 'udp4'}));
+
+  React.useEffect(() => {
+    socket.bind(12345);
+    
+    console.log('Message sent!');
+
+    socket.on('message', function(msg, rinfo) {
+      console.log(msg);
+      handleMessage(msg);
+    });
+  },[]);
+
+  const remotePort = 12345;
+  const remoteHost = '10.0.2.16';
+
+
 
   React.useEffect(() => {
     const subscription = accelerometer.subscribe(({ x, y, z }) => {  
@@ -78,7 +96,7 @@ function App() {
         }
         break;
       case 1:
-        console.log("BLOCKING TRUE");
+        //console.log("BLOCKING TRUE");
         setBlocking(true);
         if(pitch <= 10) {
           
@@ -127,16 +145,31 @@ function App() {
 //Phone: 128.138.65.94
 //Computer:  10.203.154.20
 
+// Create socket
+
+
+
+
+
+
+
+
+
+
+
 async function readNdef() {
-  setSocket(createTcpClient("128.138.65.94", setConnected, handleMessage));
+  //setSocket(createTcpClient("128.138.65.94", setConnected, handleMessage));
 }
 
 async function writeNdef() {
-  setSocket(createTcpServer(setConnected, setSocket, handleMessage));
+  
+  //setSocket(createTcpServer(setConnected, setSocket, handleMessage));
 }
 
 function handleMessage(data: Message) {
   switch (data.type) {
+    case "dead":
+      setInGame(false);
     case "spell":
       let damage = 0;
       switch (data.spell.type) {
@@ -152,11 +185,17 @@ function handleMessage(data: Message) {
           //send message that you were hit to oppoenent
           if (health <= 0) {
             setDead(true);
+            setInGame(false);
             console.log("You died!");
+            socket.send(JSON.stringify({ type: "dead", isDead: true }), undefined, undefined, remotePort, remoteHost, function(err) {
+              if (err) throw err
+          
+              console.log('Message sent!')
+            });
           }
         }
         Vibration.cancel();
-        socket?.write(JSON.stringify({ type: "hit", hit: { health: health, by: data.spell.type, dead: dead } }));
+       //socket.send(JSON.stringify({ type: "hit", hit: { health: health, by: data.spell.type, dead: dead } }));
       }, data.spell.delay);
       break;
     case "hit":
@@ -165,7 +204,7 @@ function handleMessage(data: Message) {
       console.log("Opponent health: " + data.hit.health);
       if (data.hit.dead) {
         console.log("Opponent died!");
-        socket?.destroy();
+        //socket?.destroy();
       }
       break;
     case "start":
@@ -182,7 +221,11 @@ function attack() {
   setTimeout(() => {
     setSpellCooldown(0);
   }, 5000);
-  socket?.write(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }));
+  socket.send(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }), undefined, undefined, remotePort, remoteHost, function(err) {
+    if (err) throw err
+
+    console.log('Message sent!')
+  });
 }
 
 if (inGame) {
@@ -205,6 +248,7 @@ return (
                 <Image style={{position:'absolute', width: 300, height:125, top:37}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
                 <TouchableOpacity onPress={() => {
                   setInGame(true);
+                  writeNdef();
                  }}>
                    <Text style={{fontFamily:"PixelOperator", fontSize:48, color:'black'}}>CHALLENGE</Text>
               </TouchableOpacity>
@@ -213,6 +257,7 @@ return (
                 <Image style={{position:'absolute', width: 300, height:125, top:11}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
                 <TouchableOpacity onPress={() => {
                   setInGame(true);
+                  readNdef();
                  }}>
                   <Text style={{fontFamily:"PixelOperator", fontSize:50, color:'black'}}>ACCEPT</Text>
                 </TouchableOpacity>
