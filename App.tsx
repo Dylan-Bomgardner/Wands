@@ -23,7 +23,7 @@ var i = 0;
 NfcManager.start();
 
 const remotePort = 12345;
-const remoteHost = '10.0.2.16';
+const remoteHost = '10.203.168.51';
 
 const socket = dgram.createSocket('udp4');
 
@@ -205,9 +205,9 @@ function handleMessage(data: Message) {
       setInGame(false);
     case "spell":
       let damage = 0;
-      switch (data.spell.type) {
+      switch (bigdata.spell.type) {
         case "fireball":
-          damage = data.spell.damage;
+          damage = bigdata.spell.damage;
           break;
       }
       Vibration.vibrate();
@@ -229,13 +229,13 @@ function handleMessage(data: Message) {
         }
         Vibration.cancel();
        //socket.send(JSON.stringify({ type: "hit", hit: { health: health, by: data.spell.type, dead: dead } }));
-      }, data.spell.delay);
+      }, bigdata.spell.delay);
       break;
     case "hit":
       //hit success
-      console.log("Opponent was hit by your " + data.hit.by + "!");
-      console.log("Opponent health: " + data.hit.health);
-      if (data.hit.dead) {
+      console.log("Opponent was hit by your " + bigdata.hit.by + "!");
+      console.log("Opponent health: " + bigdata.hit.health);
+      if (bigdata.hit.dead) {
         console.log("Opponent died!");
         //socket?.destroy();
       }
