@@ -23,17 +23,20 @@ var i = 0;
 NfcManager.start();
 
 const remotePort = 12345;
-const remoteHost = '10.203.154.20';
+const remoteHost = '10.203.168.51';
 
 const socket = dgram.createSocket('udp4');
 
 let health = 100;
+let block = 0
+let blocking = false;
+
 socket.bind(12345);
 
 function App() {
 
   const [fireball, setFireball] = React.useState(0);
-  const [block, setBlock] = React.useState(0);
+  //const [block, setBlock] = React.useState(0);
   const [combat, setCombat] = React.useState(0);
   const [Acceleration, setAcceleration] = React.useState([0, 0, 0])
   const [temp, setTemp] = React.useState("");
@@ -48,18 +51,19 @@ function App() {
 
   const [spellCooldown, setSpellCooldown] = React.useState(0);
   //const [socket, setSocket] = React.useState<TcpSocket.Socket>();
-  const [blocking, setBlocking] = React.useState(false);
+  //const [blocking, setBlocking] = React.useState(false);
   const [dead, setDead] = React.useState(false);
   const [inGame, setInGame] = React.useState(false);
-  const [backgroundColor, setBackgroundColor] = React.useState('green')
+  const [backgroundColor, setBackgroundColor] = React.useState('green');
   const [backgroundOpacity, setBackgroundOpacity] = React.useState(0);
-    
+
   React.useEffect(() => {
-    
+
     socket.once('listening', function () {
-      socket.on('message', function(msg, rinfo) {
+      socket.on('message', function (msg, rinfo) {
         console.log("message received", msg);
-        handleMessage(msg);
+        var bigdata = JSON.parse(msg);
+        handleMessage(bigdata);
       });
     })
   }, []);
@@ -68,10 +72,10 @@ function App() {
   //   if (err) throw err       
   //   console.log('Message sent!')
   // });
-  
-  
+
+
   React.useEffect(() => {
-    const subscription = accelerometer.subscribe(({ x, y, z }) => {  
+    const subscription = accelerometer.subscribe(({ x, y, z }) => {
       blockHandler();
       fireballHandler();
       combatHandler();
@@ -83,230 +87,220 @@ function App() {
   //1618
 
   function combatHandler() {
-    
+
   }
 
   function blockHandler() {
     switch (block) {
       case 0:
         setBackgroundOpacity(0);
-        if(fireball == 0 && pitch >= 50) {
+        if (fireball == 0 && pitch >= 50) {
           setBackgroundColor("green");
           setBackgroundOpacity(0.7);
-          setBlock(1);
+          block = 1;
         }
         break;
       case 1:
         console.log("BLOCKING TRUE");
-        
-        setBlocking(true);
-        if(pitch <= 10) {
-          
-          setBlock(0);
-          setBlocking(false);
+
+        blocking = true;
+        if (pitch <= 10) {
+
+          blocking = false;
+          block = 0;
           console.log("blocking false");
         }
         break;
     }
   }
 
-  
+
   function fireballHandler() {
-      switch (fireball) {
-        case 0:
-          if(block == 0 && (roll >= 50)) {
-            setFireball(1);
-            setBackgroundColor("red");
-            setBackgroundOpacity(0.1);
-            console.log("Fireball 1");
-          }
-          break;
-        case 1:
-          if(block == 0 && roll < 20) {
-            setFireball(2);
-            setBackgroundOpacity(0.4);
-            console.log("Fireball 2");
-          }
-          break;
-        case 2: 
-          if(block == 0 && pitch > 30) {
-            setFireball(3);
-            setBackgroundOpacity(0.7);
-            console.log("Fireball 3");
-          }
-          break;
-        case 3:
-          if(block == 0 && pitch < 10) {
-            setFireball(0);
-            setBackgroundOpacity(0);
-            console.log("FINISHED");
-            console.log("HANDLE SENDER HERE");
-            attack();
-
-          }
-      }
-  }
-//Phone: 128.138.65.94
-//Computer:  10.203.154.20
-
-// Create socket
-
-
-
-
-
-
-
-
-
-
-
-async function readNdef() {
-  try {
-    // register for the NFC tag with NDEF in it
-    await NfcManager.requestTechnology(NfcTech.Ndef);
-    // the resolved tag object will contain `ndefMessage` property
-    const tag = await NfcManager.getTag();
-    console.warn('Tag found', tag);
-    console.log('Tag found', tag);
-  } catch (ex) {
-    console.warn('Oops!', ex);
-  } finally {
-    // stop the nfc scanning
-    NfcManager.cancelTechnologyRequest();
-  }
-}
-
-async function writeNdef() {
-  let result = false;
-
-  try {
-    // STEP 1
-    await NfcManager.requestTechnology(NfcTech.Ndef);
-
-    const bytes = Ndef.encodeMessage([Ndef.textRecord('Hello NFC')]);
-
-    if (bytes) {
-      await NfcManager.ndefHandler // STEP 2
-        .writeNdefMessage(bytes); // STEP 3
-      result = true;
-    }
-  } catch (ex) {
-    console.warn(ex);
-  } finally {
-    // STEP 4
-    NfcManager.cancelTechnologyRequest();
-  }
-
-  return result;
-}
-
-function handleMessage(data: Message) {
-  var bigdata = JSON.parse(data);
-  
-  console.log(bigdata.type);
-  switch (bigdata.type) {
-    case "dead":
-      setInGame(false);
-    case "spell":
-      let damage = 0;
-      switch (bigdata.spell.type) {
-        case "fireball":
-          damage = bigdata.spell.damage;
-          break;
-      }
-      Vibration.vibrate();
-     setTimeout(() => {
-        if (!blocking) {
-          health -= damage;
-          console.log("You were hit by " + damage + " damage!");
-          //send message that you were hit to oppoenent
-          if (health <= 0) {
-            setDead(true);
-            setInGame(false);
-            console.log("You died!");
-          }
+    switch (fireball) {
+      case 0:
+        if (block == 0 && (roll >= 50)) {
+          setFireball(1);
+          setBackgroundColor("red");
+          setBackgroundOpacity(0.1);
+          console.log("Fireball 1");
         }
-        Vibration.cancel();
-        socket.send(JSON.stringify({ type: "hit", hit: { by: bigdata.spell.type, dead: dead} }), undefined, undefined, remotePort, remoteHost, function(err) {
-          if (err) throw err
-      
-          console.log('Message sent!')
-        });
-      }, 3000);
-      break;
-    case "hit":
-      //hit success
-      console.log("Opponent was hit by your " + bigdata.hit.by + "!");
-      console.log("Opponent health: " + bigdata.hit.health);
-      if (bigdata.hit.dead) {
-        console.log("Opponent died!");
-        setInGame(false)
-        health = 100
+        break;
+      case 1:
+        if (block == 0 && roll < 20) {
+          setFireball(2);
+          setBackgroundOpacity(0.4);
+          console.log("Fireball 2");
+        }
+        break;
+      case 2:
+        if (block == 0 && pitch > 30) {
+          setFireball(3);
+          setBackgroundOpacity(0.7);
+          console.log("Fireball 3");
+        }
+        break;
+      case 3:
+        if (block == 0 && pitch < 10) {
+          setFireball(0);
+          setBackgroundOpacity(0);
+          console.log("FINISHED");
+          console.log("HANDLE SENDER HERE");
+          attack();
+
+        }
+    }
+  }
+  //Phone: 10.203.168.51
+  //Computer:  10.203.154.20
+
+  // Create socket
+
+
+  async function readNdef() {
+    try {
+      // register for the NFC tag with NDEF in it
+      await NfcManager.requestTechnology(NfcTech.Ndef);
+      // the resolved tag object will contain `ndefMessage` property
+      const tag = await NfcManager.getTag();
+      console.warn('Tag found', tag);
+      console.log('Tag found', tag);
+    } catch (ex) {
+      console.warn('Oops!', ex);
+    } finally {
+      // stop the nfc scanning
+      NfcManager.cancelTechnologyRequest();
+    }
+  }
+
+  async function writeNdef() {
+    let result = false;
+
+    try {
+      // STEP 1
+      await NfcManager.requestTechnology(NfcTech.Ndef);
+
+      const bytes = Ndef.encodeMessage([Ndef.textRecord('Hello NFC')]);
+
+      if (bytes) {
+        await NfcManager.ndefHandler // STEP 2
+          .writeNdefMessage(bytes); // STEP 3
+        result = true;
       }
-      break;
-    case "start":
-      console.log("Game started!");
-      break;
+    } catch (ex) {
+      console.warn(ex);
+    } finally {
+      // STEP 4
+      NfcManager.cancelTechnologyRequest();
+    }
+
+    return result;
   }
-}
 
-function attack() {
-  if (spellCooldown > 0) {
-    console.log("Spell on cooldown!");
-    return;
+  function handleMessage(data: Message) {
+
+    console.log(data);
+    switch (data.type) {
+      case "dead":
+        setInGame(false);
+      case "spell":
+        let damage = 0;
+        switch (data.spell.type) {
+          case "fireball":
+            damage = data.spell.damage;
+            break;
+        }
+        Vibration.vibrate();
+        setTimeout(() => {
+          if (!blocking) {
+            health -= damage;
+            console.log("You were hit by " + damage + " damage!");
+            //send message that you were hit to oppoenent
+            if (health <= 0) {
+              setDead(true);
+              setInGame(false);
+              console.log("You died!");
+            }
+          }
+          Vibration.cancel();
+          socket.send(JSON.stringify({ type: "hit", hit: { by: data.spell.type, dead: dead } }), undefined, undefined, remotePort, remoteHost, function (err) {
+            if (err) throw err
+
+            console.log('Message sent!')
+          });
+        }, 3000);
+        break;
+      case "hit":
+        //hit success
+        console.log("Opponent was hit by your " + data.hit.by + "!");
+        console.log("Opponent health: " + data.hit.health);
+        if (data.hit.dead) {
+          console.log("Opponent died!");
+          setInGame(false)
+          health = 100
+        }
+        break;
+      case "start":
+        console.log("Game started!");
+        break;
+    }
   }
-  setTimeout(() => {
-    setSpellCooldown(0);
-  }, 5000);
-  socket.send(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }), undefined, undefined, remotePort, remoteHost, function(err) {
-    if (err) throw err
 
-    console.log('Message sent!')
-  });
-}
+  function attack() {
+    if (spellCooldown > 0) {
+      console.log("Spell on cooldown!");
+      return;
+    }
+    setTimeout(() => {
+      setSpellCooldown(0);
+    }, 5000);
+    socket.send(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }), undefined, undefined, remotePort, remoteHost, function (err) {
+      if (err) throw err
 
-if (inGame) {
+      console.log('Message sent!')
+    });
+  }
+
+  if (inGame) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Image style={{ position: "absolute", width: '100%', height: '100%' }} source={{ uri: "https://i.imgur.com/xcBKEXg.png" }} />
+        <View style={{ flex: 1, width: '100%', height: '100%', backgroundColor: backgroundColor, opacity: backgroundOpacity }}></View>
+      </View>
+    );
+  }
+
   return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-      <Image style={{position: "absolute", width:'100%', height:'100%'}} source={{uri: "https://i.imgur.com/xcBKEXg.png"}}/>
-      <View style={{flex: 1, width: '100%', height: '100%', backgroundColor: backgroundColor, opacity: backgroundOpacity}}></View>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'gray' }}>
+      <Image style={{ position: "absolute", width: '100%', height: '100%' }} source={{ uri: "https://i.imgur.com/xcBKEXg.png" }} />
+      <View style={{ flex: 0.10, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 97, fontFamily: 'alagard', color: '#de9f35' }}>WANDS</Text>
+      </View>
+      <View style={{ flex: 0.02, justifyContent: 'center', alignItems: 'center' }}></View>
+      <View style={{ flex: 0.25, justifyContent: 'center', alignItems: 'center' }}>
+        <Image style={{ position: 'absolute', width: 300, height: 125, top: 37 }} source={{ uri: 'https://i.imgur.com/KFaRBIK.png' }} />
+        <TouchableOpacity onPress={() => {
+          console.log(writeNdef());
+          setInGame(true);
+        }}>
+          <Text style={{ fontFamily: "PixelOperator", fontSize: 48, color: 'black' }}>CHALLENGE</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={{ flex: 0.18, justifyContent: 'center', alignItems: 'center' }}>
+        <Image style={{ position: 'absolute', width: 300, height: 125, top: 11 }} source={{ uri: 'https://i.imgur.com/KFaRBIK.png' }} />
+        <TouchableOpacity onPress={() => {
+          readNdef();
+          setInGame(true);
+        }}>
+          <Text style={{ fontFamily: "PixelOperator", fontSize: 50, color: 'black' }}>ACCEPT</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={{ flex: 0.3, justifyContent: 'center', alignItems: 'center' }}>
+        <Image style={{ position: 'absolute', width: 300, height: 125, top: 56 }} source={{ uri: 'https://i.imgur.com/KFaRBIK.png' }} />
+        <Text style={{ fontFamily: "PixelOperator", fontSize: 50, color: 'black' }}>LOADOUT</Text>
+      </View>
     </View>
-  );
-}
 
-return (
-  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'gray'}}>
-            <Image style={{position: "absolute", width:'100%', height:'100%'}} source={{uri: "https://i.imgur.com/xcBKEXg.png"}}/>
-            <View style={{flex:0.10, justifyContent:'center', alignItems:'center'}}>
-                <Text style={{fontSize:97, fontFamily: 'alagard', color:'#de9f35'}}>WANDS</Text>
-            </View>
-            <View style={{flex:0.02, justifyContent:'center', alignItems:'center'}}></View>
-            <View style={{flex:0.25, justifyContent:'center', alignItems:'center'}}>
-                <Image style={{position:'absolute', width: 300, height:125, top:37}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
-                <TouchableOpacity onPress={() => {
-                  console.log(writeNdef());
-                  setInGame(true);
-                 }}>
-                   <Text style={{fontFamily:"PixelOperator", fontSize:48, color:'black'}}>CHALLENGE</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={{flex:0.18, justifyContent:'center', alignItems:'center'}}>
-                <Image style={{position:'absolute', width: 300, height:125, top:11}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
-                <TouchableOpacity onPress={() => {
-                  readNdef();
-                  setInGame(true);
-                 }}>
-                  <Text style={{fontFamily:"PixelOperator", fontSize:50, color:'black'}}>ACCEPT</Text>
-                </TouchableOpacity>
-            </View>
-            <View style={{flex:0.3, justifyContent:'center', alignItems:'center'}}>
-            <Image style={{position:'absolute', width: 300, height:125, top:56}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
-                <Text style={{fontFamily:"PixelOperator", fontSize:50, color:'black'}}>LOADOUT</Text>
-            </View>
-        </View>
-  
-);
+  );
 }
 
 const styles = StyleSheet.create({
