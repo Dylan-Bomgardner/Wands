@@ -20,6 +20,8 @@ setUpdateIntervalForType(SensorTypes.accelerometer, 70); // defaults to 100ms
 setUpdateIntervalForType(SensorTypes.magnetometer, 100);
 var i = 0;
 
+NfcManager.start();
+
 const remotePort = 12345;
 const remoteHost = '10.0.2.16';
 
@@ -66,12 +68,6 @@ function App() {
   // });
   
   
- 
-
-  
-
-  
-
   React.useEffect(() => {
     const subscription = accelerometer.subscribe(({ x, y, z }) => {  
       blockHandler();
@@ -161,12 +157,43 @@ function App() {
 
 
 async function readNdef() {
-  //setSocket(createTcpClient("128.138.65.94", setConnected, handleMessage));
+  try {
+    // register for the NFC tag with NDEF in it
+    await NfcManager.requestTechnology(NfcTech.Ndef);
+    // the resolved tag object will contain `ndefMessage` property
+    const tag = await NfcManager.getTag();
+    console.warn('Tag found', tag);
+    console.log('Tag found', tag);
+  } catch (ex) {
+    console.warn('Oops!', ex);
+  } finally {
+    // stop the nfc scanning
+    NfcManager.cancelTechnologyRequest();
+  }
 }
 
-async function writeNdef() {
-  
-  //setSocket(createTcpServer(setConnected, setSocket, handleMessage));
+async function writeNdef({type, value}) {
+  let result = false;
+
+  try {
+    // STEP 1
+    await NfcManager.requestTechnology(NfcTech.Ndef);
+
+    const bytes = Ndef.encodeMessage([Ndef.textRecord('Hello NFC')]);
+
+    if (bytes) {
+      await NfcManager.ndefHandler // STEP 2
+        .writeNdefMessage(bytes); // STEP 3
+      result = true;
+    }
+  } catch (ex) {
+    console.warn(ex);
+  } finally {
+    // STEP 4
+    NfcManager.cancelTechnologyRequest();
+  }
+
+  return result;
 }
 
 function handleMessage(data: Message) {
@@ -253,8 +280,8 @@ return (
             <View style={{flex:0.25, justifyContent:'center', alignItems:'center'}}>
                 <Image style={{position:'absolute', width: 300, height:125, top:37}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
                 <TouchableOpacity onPress={() => {
+                  console.log(writeNdef());
                   setInGame(true);
-                  writeNdef();
                  }}>
                    <Text style={{fontFamily:"PixelOperator", fontSize:48, color:'black'}}>CHALLENGE</Text>
               </TouchableOpacity>
@@ -262,8 +289,8 @@ return (
             <View style={{flex:0.18, justifyContent:'center', alignItems:'center'}}>
                 <Image style={{position:'absolute', width: 300, height:125, top:11}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
                 <TouchableOpacity onPress={() => {
-                  setInGame(true);
                   readNdef();
+                  setInGame(true);
                  }}>
                   <Text style={{fontFamily:"PixelOperator", fontSize:50, color:'black'}}>ACCEPT</Text>
                 </TouchableOpacity>
