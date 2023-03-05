@@ -22,11 +22,9 @@ var i = 0;
 
 NfcManager.start();
 
+const socket = dgram.createSocket({type: 'udp4'});
 
-
-
-
-
+socket.bind(12345);
 
 
 function App() {
@@ -52,17 +50,16 @@ function App() {
   const [backgroundColor, setBackgroundColor] = React.useState('green')
   const [backgroundOpacity, setBackgroundOpacity] = React.useState(0);
   const [socket, setSocket] = React.useState(dgram.createSocket({type: 'udp4'}));
-
+    
   React.useEffect(() => {
     socket.bind(12345);
-    
-    console.log('Message sent!');
 
     socket.on('message', function(msg, rinfo) {
       console.log(msg);
       handleMessage(msg);
     });
-  },[]);
+  }, []);
+  
 
   const remotePort = 12345;
   const remoteHost = '10.0.2.16';
@@ -97,7 +94,7 @@ function App() {
         break;
       case 1:
         //console.log("BLOCKING TRUE");
-        setBlocking(true);
+        // setBlocking(true);
         if(pitch <= 10) {
           
           setBlock(0);
