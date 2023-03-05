@@ -46,16 +46,16 @@ function playFireballHit() {
     }
     // loaded successfully
     console.log('duration in seconds: ' + whoosh.getDuration() + 'number of channels: ' + whoosh.getNumberOfChannels());
+    // Play the sound with an onEnd callback
+    whoosh.play((success) => {
+      if (success) {
+        console.log('successfully finished playing');
+      } else {
+        console.log('playback failed due to audio decoding errors');
+      }
+    });
   });
 
-  // Play the sound with an onEnd callback
-  whoosh.play((success) => {
-    if (success) {
-      console.log('successfully finished playing');
-    } else {
-      console.log('playback failed due to audio decoding errors');
-    }
-  });
 
 // Reduce the volume by half
   whoosh.setVolume(1.0);
@@ -80,16 +80,17 @@ function playFireballSend() {
     }
     // loaded successfully
     console.log('duration in seconds: ' + whoosh.getDuration() + 'number of channels: ' + whoosh.getNumberOfChannels());
+    // Play the sound with an onEnd callback
+    whoosh.play((success) => {
+      if (success) {
+        console.log('successfully finished playing');
+      } else {
+        console.log('playback failed due to audio decoding errors');
+      }
+    });
+
   });
 
-  // Play the sound with an onEnd callback
-  whoosh.play((success) => {
-    if (success) {
-      console.log('successfully finished playing');
-    } else {
-      console.log('playback failed due to audio decoding errors');
-    }
-  });
 
 // Reduce the volume by half
   whoosh.setVolume(1.0);
