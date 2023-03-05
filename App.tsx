@@ -240,7 +240,31 @@ async function writeNdef() {
   });
 }
 return (
-  <View style={styles.wrapper}>
+  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'gray'}}>
+            <Image style={{position: "absolute", width:'100%', height:'100%'}} source={{uri: "https://i.imgur.com/xcBKEXg.png"}}/>
+            <View style={{flex:0.10, justifyContent:'center', alignItems:'center'}}>
+                <Text style={{fontSize:97, fontFamily: 'alagard', color:'#de9f35'}}>WANDS</Text>
+            </View>
+            <View style={{flex:0.02, justifyContent:'center', alignItems:'center'}}>
+
+            </View>
+            <View style={{flex:0.25, justifyContent:'center', alignItems:'center'}}>
+                <Image style={{position:'absolute', width: 300, height:125, top:37}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
+                <Text style={{fontFamily:"PixelOperator", fontSize:48, color:'black'}}>CHALLENGE</Text>
+            </View>
+            <View style={{flex:0.18, justifyContent:'center', alignItems:'center'}}>
+                <Image style={{position:'absolute', width: 300, height:125, top:11}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
+                <Text style={{fontFamily:"PixelOperator", fontSize:50, color:'black'}}>ACCEPT</Text>
+            </View>
+            <View style={{flex:0.3, justifyContent:'center', alignItems:'center'}}>
+            <Image style={{position:'absolute', width: 300, height:125, top:56}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
+                <Text style={{fontFamily:"PixelOperator", fontSize:50, color:'black'}}>LOADOUT</Text>
+            </View>
+        </View>
+  
+);
+
+/* (<View style={styles.wrapper}>
     <TouchableOpacity onPress={writeNdef}>
       <Text>Attack</Text>
     </TouchableOpacity>
@@ -248,15 +272,15 @@ return (
       <Text>
         Pitch: {pitch}, Roll: {roll}
       </Text>
-      {/* <Text>{Object.entries(availableSensors).map(([name, values]) => (
+      { <Text>{Object.entries(availableSensors).map(([name, values]) => (
           <SensorView key={name} sensorName={name} values={values}  /> ))}
-        </Text> */}
-    </TouchableOpacity>
-    <Text>{ }</Text>
-    <Text>{temp}</Text>
-    <Text>{connected ? "Connected" : "Not Connected"}</Text>
-  </View>
-);
+        </Text> }
+        </TouchableOpacity>
+        <Text>{ }</Text>
+        <Text>{temp}</Text>
+        <Text>{connected ? "Connected" : "Not Connected"}</Text>
+      </View> 
+   ) */
 }
 
 

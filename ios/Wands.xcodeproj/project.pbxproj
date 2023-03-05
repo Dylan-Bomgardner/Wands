@@ -14,6 +14,13 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		7699B88040F8A987B510C191 /* libPods-Wands-WandsTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-Wands-WandsTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		AB0706F6633349A58A7BF8C5 /* 1up.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C13ACEE215AF4644A38C1AAA /* 1up.ttf */; };
+		10F5864878534F2F847E4862 /* GothicPixels.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EFE06D6E391D4C8982D45940 /* GothicPixels.ttf */; };
+		CD1A5EE1839D4824B2BC0FA2 /* PixelOperator-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5FCC7AD68B1746A2A6D86B36 /* PixelOperator-Bold.ttf */; };
+		86F421A0A0CC435AAD54765A /* PixelOperator.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B6DFF3BA3AB94AA4B35CBF0E /* PixelOperator.ttf */; };
+		05FBC7DF0C5345B1AB21E456 /* alagard.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C24B45CF99894E9ABD72E608 /* alagard.ttf */; };
+		49D7E2DD44AF4482BBDE5174 /* upheavtt.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7EB3481502734BB893AE1A86 /* upheavtt.ttf */; };
+		738F0832D5174403A4AE706A /* 04B_30__.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 9C7638A887484CA393BCB917 /* 04B_30__.TTF */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +51,13 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Wands/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-Wands-WandsTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Wands-WandsTests.release.xcconfig"; path = "Target Support Files/Pods-Wands-WandsTests/Pods-Wands-WandsTests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		C13ACEE215AF4644A38C1AAA /* 1up.ttf */ = {isa = PBXFileReference; name = "1up.ttf"; path = "../assets/fonts/1up.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		EFE06D6E391D4C8982D45940 /* GothicPixels.ttf */ = {isa = PBXFileReference; name = "GothicPixels.ttf"; path = "../assets/fonts/GothicPixels.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		5FCC7AD68B1746A2A6D86B36 /* PixelOperator-Bold.ttf */ = {isa = PBXFileReference; name = "PixelOperator-Bold.ttf"; path = "../assets/fonts/PixelOperator-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		B6DFF3BA3AB94AA4B35CBF0E /* PixelOperator.ttf */ = {isa = PBXFileReference; name = "PixelOperator.ttf"; path = "../assets/fonts/PixelOperator.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		C24B45CF99894E9ABD72E608 /* alagard.ttf */ = {isa = PBXFileReference; name = "alagard.ttf"; path = "../assets/fonts/alagard.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		7EB3481502734BB893AE1A86 /* upheavtt.ttf */ = {isa = PBXFileReference; name = "upheavtt.ttf"; path = "../assets/fonts/upheavtt.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		9C7638A887484CA393BCB917 /* 04B_30__.TTF */ = {isa = PBXFileReference; name = "04B_30__.TTF"; path = "../assets/fonts/04B_30__.TTF"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +136,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				D077468ECE6C491E80B8DC0C /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -147,6 +162,21 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		D077468ECE6C491E80B8DC0C /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				C13ACEE215AF4644A38C1AAA /* 1up.ttf */,
+				EFE06D6E391D4C8982D45940 /* GothicPixels.ttf */,
+				5FCC7AD68B1746A2A6D86B36 /* PixelOperator-Bold.ttf */,
+				B6DFF3BA3AB94AA4B35CBF0E /* PixelOperator.ttf */,
+				C24B45CF99894E9ABD72E608 /* alagard.ttf */,
+				7EB3481502734BB893AE1A86 /* upheavtt.ttf */,
+				9C7638A887484CA393BCB917 /* 04B_30__.TTF */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -244,6 +274,13 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				AB0706F6633349A58A7BF8C5 /* 1up.ttf in Resources */,
+				10F5864878534F2F847E4862 /* GothicPixels.ttf in Resources */,
+				CD1A5EE1839D4824B2BC0FA2 /* PixelOperator-Bold.ttf in Resources */,
+				86F421A0A0CC435AAD54765A /* PixelOperator.ttf in Resources */,
+				05FBC7DF0C5345B1AB21E456 /* alagard.ttf in Resources */,
+				49D7E2DD44AF4482BBDE5174 /* upheavtt.ttf in Resources */,
+				738F0832D5174403A4AE706A /* 04B_30__.TTF in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
