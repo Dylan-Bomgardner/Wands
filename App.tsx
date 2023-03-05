@@ -21,7 +21,7 @@ setUpdateIntervalForType(SensorTypes.magnetometer, 100);
 var i = 0;
 
 const remotePort = 12345;
-const remoteHost = '10.203.168.51';
+const remoteHost = '10.0.2.16';
 
 const socket = dgram.createSocket('udp4');
 
@@ -60,10 +60,10 @@ function App() {
     })
   }, []);
 
-  socket.send("hello", undefined, undefined, remotePort, remoteHost, function(err) {
-    if (err) throw err       
-    console.log('Message sent!')
-  });
+  // socket.send("hello", undefined, undefined, remotePort, remoteHost, function(err) {
+  //   if (err) throw err       
+  //   console.log('Message sent!')
+  // });
   
   
  
@@ -170,7 +170,10 @@ async function writeNdef() {
 }
 
 function handleMessage(data: Message) {
-  switch (data.type) {
+  var bigdata = JSON.parse(data);
+  
+  console.log(bigdata.type);
+  switch (bigdata.type) {
     case "dead":
       setInGame(false);
     case "spell":
