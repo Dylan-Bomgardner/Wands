@@ -225,7 +225,7 @@ function App() {
             }
           }
           Vibration.cancel();
-          socket.send(JSON.stringify({ type: "hit", hit: { by: data.spell.type, dead: dead } }), undefined, undefined, remotePort, remoteHost, function (err) {
+          socket.send(JSON.stringify({ type: "hit", hit: { by: data.spell.type, dead: dead, health: health } }), undefined, undefined, remotePort, remoteHost, function (err) {
             if (err) throw err
 
             console.log('Message sent!')

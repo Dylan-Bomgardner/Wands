@@ -17,6 +17,7 @@
     "react-native-sensor-fusion": "^0.0.4",
     "react-native-sensors": "^7.3.6",
     "react-native-shake": "^5.1.1",
+    "react-native-sound": "^0.11.2",
     "react-native-tcp-socket": "^6.0.6",
     "react-native-udp": "^4.1.7"
   },
