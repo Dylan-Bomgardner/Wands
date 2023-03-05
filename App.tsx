@@ -20,12 +20,12 @@ setUpdateIntervalForType(SensorTypes.accelerometer, 70); // defaults to 100ms
 setUpdateIntervalForType(SensorTypes.magnetometer, 100);
 var i = 0;
 
-NfcManager.start();
+const remotePort = 12345;
+const remoteHost = '10.203.168.51';
 
-const socket = dgram.createSocket({type: 'udp4'});
+const socket = dgram.createSocket('udp4');
 
 socket.bind(12345);
-
 
 function App() {
 
@@ -49,22 +49,28 @@ function App() {
   const [inGame, setInGame] = React.useState(false);
   const [backgroundColor, setBackgroundColor] = React.useState('green')
   const [backgroundOpacity, setBackgroundOpacity] = React.useState(0);
-  const [socket, setSocket] = React.useState(dgram.createSocket({type: 'udp4'}));
     
   React.useEffect(() => {
-    socket.bind(12345);
-
-    socket.on('message', function(msg, rinfo) {
-      console.log(msg);
-      handleMessage(msg);
-    });
+    
+    socket.once('listening', function () {
+      socket.on('message', function(msg, rinfo) {
+        console.log("message received", msg);
+        handleMessage(msg);
+      });
+    })
   }, []);
+
+  socket.send("hello", undefined, undefined, remotePort, remoteHost, function(err) {
+    if (err) throw err       
+    console.log('Message sent!')
+  });
+  
+  
+ 
+
   
 
-  const remotePort = 12345;
-  const remoteHost = '10.0.2.16';
-
-
+  
 
   React.useEffect(() => {
     const subscription = accelerometer.subscribe(({ x, y, z }) => {  
@@ -94,7 +100,7 @@ function App() {
         break;
       case 1:
         //console.log("BLOCKING TRUE");
-        // setBlocking(true);
+        //setBlocking(true);
         if(pitch <= 10) {
           
           setBlock(0);
