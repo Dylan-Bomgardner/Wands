@@ -25,11 +25,11 @@ var i = 0;
 NfcManager.start();
 
 const remotePort = 12345;
-const remoteHost = '10.203.168.51';
+const remoteHost = '10.203.152.20';
 
 const socket = dgram.createSocket('udp4');
 
-let health = 100;
+let health = 30;
 let block = 0
 let blocking = false;
 
