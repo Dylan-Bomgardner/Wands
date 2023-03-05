@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Vibration } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Vibration, Image } from 'react-native';
 import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
 import { NetworkInfo } from 'react-native-network-info';
 import TcpSocket from 'react-native-tcp-socket';
@@ -117,6 +117,28 @@ function App() {
     socket?.write(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }));
   }
   return (
+    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'gray'}}>
+            <Image style={{position: "absolute", width:'100%', height:'100%'}} source={{uri: "https://i.imgur.com/xcBKEXg.png"}}/>
+            <View style={{flex:0.10, justifyContent:'center', alignItems:'center'}}>
+                <Text style={{fontSize:97, fontFamily: 'alagard', color:'#de9f35'}}>WANDS</Text>
+            </View>
+            <View style={{flex:0.02, justifyContent:'center', alignItems:'center'}}>
+
+            </View>
+            <View style={{flex:0.25, justifyContent:'center', alignItems:'center'}}>
+                <Image style={{position:'absolute', width: 300, height:125, top:37}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
+                <Text style={{fontFamily:"PixelOperator", fontSize:48, color:'black'}}>CHALLENGE</Text>
+            </View>
+            <View style={{flex:0.18, justifyContent:'center', alignItems:'center'}}>
+                <Image style={{position:'absolute', width: 300, height:125, top:11}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
+                <Text style={{fontFamily:"PixelOperator", fontSize:50, color:'black'}}>ACCEPT</Text>
+            </View>
+            <View style={{flex:0.3, justifyContent:'center', alignItems:'center'}}>
+            <Image style={{position:'absolute', width: 300, height:125, top:56}} source={{uri: 'https://i.imgur.com/KFaRBIK.png'}}/>
+                <Text style={{fontFamily:"PixelOperator", fontSize:50, color:'black'}}>LOADOUT</Text>
+            </View>
+        </View>
+    /*
     <View style={styles.wrapper}>
       <TouchableOpacity onPress={writeNdef}>
         <Text>Write</Text>
@@ -130,6 +152,7 @@ function App() {
       <Text>{temp}</Text>
       <Text>{connected ? "Connected" : "Not Connected"}</Text>
     </View>
+    */
   );
 }
 
