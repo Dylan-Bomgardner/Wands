@@ -56,6 +56,7 @@ function App() {
   const [inGame, setInGame] = React.useState(false);
   const [backgroundColor, setBackgroundColor] = React.useState('green');
   const [backgroundOpacity, setBackgroundOpacity] = React.useState(0);
+  const [gameOver, setGameOver] = React.useState(false);
 
   React.useEffect(() => {
 
@@ -218,6 +219,7 @@ function App() {
             if (health <= 0) {
               setDead(true);
               setInGame(false);
+              setGameOver(true);
               console.log("You died!");
             }
           }
@@ -258,6 +260,25 @@ function App() {
 
       console.log('Message sent!')
     });
+  }
+
+  if (gameOver) {
+    return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Image style={{ position: "absolute", width: '100%', height: '100%' }} source={{ uri: "https://i.imgur.com/xcBKEXg.png" }} />
+        <View style={{ flex: 0.40, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: 95, fontFamily: '1up', color: 'white', left: 18 }}>GAME OVER</Text>
+        </View>
+        <View style={{ flex: 0.1, justifyContent: 'center', alignItems: 'center' }}>
+          <Image style={{ position: 'absolute', width: 300, height: 125}} source={{ uri: 'https://i.imgur.com/KFaRBIK.png' }} />
+          <TouchableOpacity onPress={() => {
+            setGameOver(false);
+          }}>
+            <Text style={{ fontFamily: "PixelOperator", fontSize: 48, color: 'black' }}>CONTINUE</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{flex: 0.5}}></View>
+    </View>);
   }
 
   if (inGame) {
