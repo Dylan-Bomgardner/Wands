@@ -3,15 +3,61 @@ import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import NfcManager, {NfcTech, Ndef} from 'react-native-nfc-manager';
 import {NetworkInfo} from 'react-native-network-info';
 import TcpSocket from 'react-native-tcp-socket';
-
 // Pre-step, call this before any NFC operations
+import SensorView from "./SensorView";
+import {
+  accelerometer,
+  gyroscope,
+  setUpdateIntervalForType,
+  SensorTypes
+} from "react-native-sensors";
+import { map, filter } from "rxjs/operators";
+setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
+
+
+
 NfcManager.start();
 
 function App() {
 
   const [temp, setTemp] = React.useState("");
   const [connected, setConnected] = React.useState(false);
-    
+  const [heading, setHeading] = React.useState(0);
+  const [roll, setRoll] = React.useState(0);
+  const [pitch, setPitch] = React.useState(0);
+  const [shaking, setShaking] = React.useState(false);
+
+  const [health, setHealth] = React.useState(100);
+  const [spellCooldown, setSpellCooldown] = React.useState(0);
+  const [socket, setSocket] = React.useState<TcpSocket.Socket>();
+  const [blocking, setBlocking] = React.useState(false);
+  
+  function handleMessage(data: string, 
+    setOpponentHealthVisual: (health: number) => void,
+    writeSocket: (data: string) => void) {
+    let data_json = JSON.parse(data);
+    if (data_json.msg_type === "attack") {
+      if ("damage" in data_json.effects) {
+        setTimeout(() => {
+          if(!blocking)
+          {
+            setHealth(health - data_json.effects.damage);
+            console.log("You were hit by " + data_json.effects.damage + " damage!");
+          }
+          else
+          {
+            
+          }       
+        }, 1000);
+      }
+    }
+    else if (data_json.msg_type === "hit_notif") {
+      console.log("Opponent was hit by your " + data_json.what_hit + "!");
+    }
+    else if (data_json.msg_type === "health_notif") {
+      setOpponentHealthVisual(data_json.new_health);
+    }
+  }
   async function readNdef() {
     if(connected)
     {
@@ -106,6 +152,7 @@ function App() {
     }
   
     const server = TcpSocket.createServer(function(socket) {
+      setSocket(socket);
       socket.on('data', (data) => {
         socket.write('Echo server ' + data);
         setConnected(true);
@@ -130,42 +177,34 @@ function App() {
       setConnected(false);
     });  
   }
-
-  async function test()
-  {
-    while(temp == "")
-    try
-    {
-      if(Math.round((100* Math.random())%5))
-      {
-        await writeNdef();
-      }
-      else
-      {
-        await readNdef();
-      }
-      await NfcManager.cancelTechnologyRequest();
-    }
-    catch(ex)
-    {
-      console.warn(ex);
-    }
-  }
-
-  
-
+  const axis = ["x", "y", "z"];
+  const availableSensors = {
+    accelerometer: axis,
+    gyroscope: axis,
+    magnetometer: axis,
+    barometer: ["pressure"],
+  };
+  const accel = accelerometer.subscribe(({x, y, z, timestamp}) =>
+    console.log({x, y, z, timestamp})
+  );
   return (
     <View style={styles.wrapper}>
       <TouchableOpacity onPress={writeNdef}>
         <Text>Attack</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={readNdef}>
-        <Text>Wait for Attacker</Text>
+        <Text>{Object.entries(availableSensors).map(([name, values]) => (
+          <SensorView key={name} sensorName={name} values={values}  /> ))}
+        </Text>
       </TouchableOpacity>
+      <Text>{}</Text>
       <Text>{temp}</Text>
+      <Text>{connected ? "Connected" : "Not Connected"}</Text>
     </View>
   );
 }
+
+
 
 
 
