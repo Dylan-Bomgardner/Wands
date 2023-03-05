@@ -14,6 +14,7 @@ import {
   magnetometer
 } from "react-native-sensors";
 import { map, filter } from "rxjs/operators";
+import { createTcpClient, createTcpServer, Message } from './tcp';
 setUpdateIntervalForType(SensorTypes.accelerometer, 70); // defaults to 100ms
 setUpdateIntervalForType(SensorTypes.magnetometer, 100);
 var i = 0;
@@ -102,142 +103,61 @@ function App() {
       }
   }
 
-  
-
-function handleMessage(data: string,
-  setOpponentHealthVisual: (health: number) => void,
-  writeSocket: (data: string) => void) {
-  let data_json = JSON.parse(data);
-  if (data_json.msg_type === "attack") {
-    if ("damage" in data_json.effects) {
+async function readNdef() {
+  setSocket(createTcpClient("10.203.154.20", setConnected, handleMessage));
+}
+function handleMessage(data: Message) {
+  switch (data.type) {
+    case "spell":
+      let damage = 0;
+      switch (data.spell.type) {
+        case "fireball":
+          damage = data.spell.damage;
+          break;
+      }
+      Vibration.vibrate();
       setTimeout(() => {
         if (!blocking) {
-          setHealth(health - data_json.effects.damage);
-          console.log("You were hit by " + data_json.effects.damage + " damage!");
+          setHealth(health - damage);
+          console.log("You were hit by " + damage + " damage!");
+          //send message that you were hit to oppoenent
+          if (health <= 0) {
+            setDead(true);
+            console.log("You died!");
+          }
         }
-        else {
-
-        }
-      }, 1000);
-    }
-  }
-  else if (data_json.msg_type === "hit_notif") {
-    console.log("Opponent was hit by your " + data_json.what_hit + "!");
-  }
-  else if (data_json.msg_type === "health_notif") {
-    setOpponentHealthVisual(data_json.new_health);
+        Vibration.cancel();
+        socket?.write(JSON.stringify({ type: "hit", hit: { health: health, by: data.spell.type, dead: dead } }));
+      }, data.spell.delay);
+      break;
+    case "hit":
+      //hit success
+      console.log("Opponent was hit by your " + data.hit.by + "!");
+      console.log("Opponent health: " + data.hit.health);
+      if (data.hit.dead) {
+        console.log("Opponent died!");
+        socket?.destroy();
+      }
+      break;
+    case "start":
+      console.log("Game started!");
+      break;
   }
 }
-async function readNdef() {
-  if (connected) {
-    console.warn("Already connected");
+
+function attack() {
+  if (spellCooldown > 0) {
+    console.log("Spell on cooldown!");
     return;
   }
-
-  try {
-    let tag: any
-    // the resolved tag object will contain `ndefMessage` property
-    tag = await NfcManager.requestTechnology(NfcTech.Ndef); // STEP 1
-    console.warn('Tag found', tag);
-    if (tag == undefined) {
-      throw new Error("Tag not found");
-    }
-    const decodedData = Ndef.text.decodePayload(tag.ndefMessage[0].payload);
-    console.warn('decodedData', decodedData);
-    setTemp(decodedData);
-  } catch (ex) {
-    console.warn('Oops!', ex);
-  }
-  finally {
-    await NfcManager.cancelTechnologyRequest();
-  }
-
-  const options = {
-    port: 5000,
-    host: temp, //needs to be ip from the other device
-    localAddress: '127.0.0.1',
-    reuseAddress: true,
-  };
-  const client = TcpSocket.createConnection(options, () => {
-    // Write on the socket
-    client.write('Hello server!');
-    setConnected(true);
-    // Close socket
-  });
-
-  client.on('data', function (data) {
-    console.log('message was received', data);
-
-    if (data == "Please Close") {
-      client.destroy();
-    }
-    else {
-      const info = JSON.parse(data.toString());
-      console.log(info);
-    }
-  });
-
-  client.on('error', function (error) {
-    console.log(error);
-  });
-
-  client.on('close', function () {
-    console.log('Connection closed!');
-    setConnected(false);
-  });
-
-
+  setTimeout(() => {
+    setSpellCooldown(0);
+  }, 5000);
+  socket?.write(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }));
 }
 
 async function writeNdef() {
-  let result = false;
-  if (connected) {
-    console.warn("Already connected");
-    return;
-  }
-  try {
-    const ip = await NetworkInfo.getIPV4Address();
-    if (ip == undefined) {
-      throw new Error("IP not found");
-    }
-    const bytes = Ndef.encodeMessage([Ndef.textRecord(ip)]);
-
-    if (bytes) {
-      await NfcManager.ndefHandler.writeNdefMessage(bytes); // STEP 3
-      result = true;
-    }
-  } catch (ex) {
-    console.warn(ex);
-  }
-  finally {
-    await NfcManager.cancelTechnologyRequest();
-  }
-
-  const server = TcpSocket.createServer(function (socket) {
-    setSocket(socket);
-    socket.on('data', (data) => {
-      socket.write('Echo server ' + data);
-      setConnected(true);
-    });
-
-    socket.on('error', (error) => {
-      console.log('An error ocurred with client socket ', error);
-    });
-
-    socket.on('close', (error) => {
-      console.log('Closed connection with ', socket.address());
-      server.close();
-    });
-  }).listen({ port: 5000, host: '0.0.0.0' });
-
-  server.on('error', (error) => {
-    console.log('An error ocurred with the server', error);
-  });
-
-  server.on('close', () => {
-    console.log('Server closed connection');
-    setConnected(false);
-  });
+  setSocket(createTcpServer(setConnected, setSocket, handleMessage));
 }
 return (
   <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'gray'}}>
@@ -263,24 +183,6 @@ return (
         </View>
   
 );
-
-/* (<View style={styles.wrapper}>
-    <TouchableOpacity onPress={writeNdef}>
-      <Text>Attack</Text>
-    </TouchableOpacity>
-    <TouchableOpacity onPress={readNdef}>
-      <Text>
-        Pitch: {pitch}, Roll: {roll}
-      </Text>
-      { <Text>{Object.entries(availableSensors).map(([name, values]) => (
-          <SensorView key={name} sensorName={name} values={values}  /> ))}
-        </Text> }
-        </TouchableOpacity>
-        <Text>{ }</Text>
-        <Text>{temp}</Text>
-        <Text>{connected ? "Connected" : "Not Connected"}</Text>
-      </View> 
-   ) */
 }
 
 
