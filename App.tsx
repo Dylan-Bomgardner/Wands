@@ -7,15 +7,6 @@ import TcpSocket from 'react-native-tcp-socket';
 import SensorView from "./SensorView";
 import { HCESession, NFCTagType4NDEFContentType, NFCTagType4 } from 'react-native-hce';
 import { createTcpClient, createTcpServer, Message } from './tcp';
-import {
-  accelerometer,
-  gyroscope,
-  setUpdateIntervalForType,
-  SensorTypes
-} from "react-native-sensors";
-import { map, filter } from "rxjs/operators";
-import { HceTools } from 'react-native-nfc-sdk';
-setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
 
 
 
@@ -23,7 +14,6 @@ setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
 NfcManager.start();
 
 function App() {
-  const hce = new HceTools();
   const [temp, setTemp] = React.useState("");
   const [connected, setConnected] = React.useState(false);
   const [heading, setHeading] = React.useState(0);
@@ -43,26 +33,27 @@ function App() {
       return;
     }
 
-    try {
-      let tag: any
-      // the resolved tag object will contain `ndefMessage` property
-      await NfcManager.requestTechnology(NfcTech.Ndef); // STEP 1
-      tag = await NfcManager.getTag(); // STEP 2
-      console.warn('Tag found', tag);
-      if (tag == undefined) {
-        throw new Error("Tag not found");
-      }
-      const decodedData = String.fromCharCode(...tag.ndefMessage[0].payload);
+    // try {
+    //   let tag: any
+    //   // the resolved tag object will contain `ndefMessage` property
+    //   await NfcManager.requestTechnology(NfcTech.Ndef); // STEP 1
+    //   tag = await NfcManager.getTag(); // STEP 2
+    //   console.warn('Tag found', tag);
+    //   if (tag == undefined) {
+    //     throw new Error("Tag not found");
+    //   }
+    //   const decodedData = String.fromCharCode(...tag.ndefMessage[0].payload);
 
-      console.warn('decodedData', decodedData);
-      setTemp(decodedData);
-      setSocket(createTcpClient(temp, setConnected, handleMessage));
-    } catch (ex) {
-      console.warn('Oops!', ex);
-    }
-    finally {
-      NfcManager.cancelTechnologyRequest();
-    }
+    //   console.warn('decodedData', decodedData);
+    //   setTemp(decodedData);
+    //   setSocket(createTcpClient(temp, setConnected, handleMessage));
+    // } catch (ex) {
+    //   console.warn('Oops!', ex);
+    // }
+    // finally {
+    //   NfcManager.cancelTechnologyRequest();
+    // }
+    setSocket(createTcpClient("10.203.154.20", setConnected, handleMessage));
 
   }
 
@@ -72,41 +63,7 @@ function App() {
       console.warn("Already connected");
       return;
     }
-    try {
-      const ip = await NetworkInfo.getIPV4Address();
-      if (ip == undefined) {
-        throw new Error("IP not found");
-      }
-
-      const listen = async () => {
-        const removeListener = session.on(HCESession.Events.HCE_STATE_READ, async () => {
-          console.log("HCE_STATE_READ");
-          await session.setEnabled(false);
-          createTcpServer(setConnected, setSocket, handleMessage);
-        });
-        
-        // to remove the listener:
-        removeListener();
-        console.log("Listening for HCE_STATE_READ");
-      }
-      let session: HCESession;
-
-      const tag = new NFCTagType4({
-        type: NFCTagType4NDEFContentType.Text,
-        content: "AHAAHAHAH",
-        writable: false
-      });
-
-      session = await HCESession.getInstance();
-      session.setApplication(tag);
-      await session.setEnabled(true);
-      listen();
-    } catch (ex) {
-      console.warn(ex);
-    }
-    finally {
-
-    }
+    createTcpServer(setConnected, setSocket, handleMessage);
 
   }
 
@@ -154,7 +111,9 @@ function App() {
       console.log("Spell on cooldown!");
       return;
     }
-    setSpellCooldown(5);
+    setTimeout(() => {
+      setSpellCooldown(0);
+    }, 5000);
     socket?.write(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }));
   }
   return (
