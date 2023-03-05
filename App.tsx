@@ -203,6 +203,7 @@ function App() {
     switch (data.type) {
       case "dead":
         setInGame(false);
+        setGameOver(true);
       case "spell":
         let damage = 0;
         switch (data.spell.type) {
