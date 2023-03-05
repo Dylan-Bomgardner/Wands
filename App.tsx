@@ -16,6 +16,8 @@ import {
 } from "react-native-sensors";
 import { map, filter } from "rxjs/operators";
 import { createTcpClient, createTcpServer, Message } from './tcp';
+var Sound = require('react-native-sound');
+
 setUpdateIntervalForType(SensorTypes.accelerometer, 70); // defaults to 100ms
 setUpdateIntervalForType(SensorTypes.magnetometer, 100);
 var i = 0;
@@ -33,8 +35,74 @@ let blocking = false;
 
 socket.bind(12345);
 
-function App() {
+function playFireballHit() {
+  // Enable playback in silence mode
+  Sound.setCategory('Playback');
 
+  var whoosh = new Sound('fireball_hit.mp3', Sound.MAIN_BUNDLE, (error) => {
+    if (error) {
+      console.log('failed to load the sound', error);
+      return;
+    }
+    // loaded successfully
+    console.log('duration in seconds: ' + whoosh.getDuration() + 'number of channels: ' + whoosh.getNumberOfChannels());
+  });
+
+  // Play the sound with an onEnd callback
+  whoosh.play((success) => {
+    if (success) {
+      console.log('successfully finished playing');
+    } else {
+      console.log('playback failed due to audio decoding errors');
+    }
+  });
+
+// Reduce the volume by half
+  whoosh.setVolume(1.0);
+
+// Loop indefinitely until stop() is called
+  whoosh.setNumberOfLoops(1);
+
+  console.log('volume: ' + whoosh.getVolume());
+
+// Release the audio player resource
+  whoosh.release();
+}
+
+function playFireballSend() {
+  // Enable playback in silence mode
+  Sound.setCategory('Playback');
+
+  var whoosh = new Sound('fireball_send.mp3', Sound.MAIN_BUNDLE, (error) => {
+    if (error) {
+      console.log('failed to load the sound', error);
+      return;
+    }
+    // loaded successfully
+    console.log('duration in seconds: ' + whoosh.getDuration() + 'number of channels: ' + whoosh.getNumberOfChannels());
+  });
+
+  // Play the sound with an onEnd callback
+  whoosh.play((success) => {
+    if (success) {
+      console.log('successfully finished playing');
+    } else {
+      console.log('playback failed due to audio decoding errors');
+    }
+  });
+
+// Reduce the volume by half
+  whoosh.setVolume(1.0);
+
+// Loop indefinitely until stop() is called
+  whoosh.setNumberOfLoops(1);
+
+  console.log('volume: ' + whoosh.getVolume());
+
+// Release the audio player resource
+  whoosh.release();
+}
+function App() {
   const [fireball, setFireball] = React.useState(0);
   //const [block, setBlock] = React.useState(0);
   const [combat, setCombat] = React.useState(0);
@@ -70,7 +138,7 @@ function App() {
   }, []);
 
   // socket.send("hello", undefined, undefined, remotePort, remoteHost, function(err) {
-  //   if (err) throw err       
+  //   if (err) throw err
   //   console.log('Message sent!')
   // });
 
@@ -216,6 +284,7 @@ function App() {
           if (!blocking) {
             health -= damage;
             console.log("You were hit by " + damage + " damage!");
+            playFireballHit();
             //send message that you were hit to oppoenent
             if (health <= 0) {
               setDead(true);
@@ -258,7 +327,7 @@ function App() {
     }, 5000);
     socket.send(JSON.stringify({ type: "spell", spell: { type: "fireball", damage: 10, delay: 1000 } }), undefined, undefined, remotePort, remoteHost, function (err) {
       if (err) throw err
-
+      else playFireballSend();
       console.log('Message sent!')
     });
   }
